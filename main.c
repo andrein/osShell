@@ -85,11 +85,11 @@ int run_internal(simple_command_t *s)
   if (!strcmp(verb_str, EXIT) ||
       !strcmp(verb_str, QUIT))
     exit(0);
-
+  
+  /* cd internal cmd */
   if (!strcmp(verb_str, CHDIR)) {
-    if (s->params == NULL) {
-//      printf("TODO: go to HOMEDIR\n");
-      chdir("~");
+    if (s->params == NULL) { // if cd has no parameters, change to $HOME directory
+      chdir(getenv("HOME"));
       return 0;
     }
     /* change dir */
