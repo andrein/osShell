@@ -93,7 +93,7 @@ int run_internal(simple_command_t *s)
       return 0;
     }
     /* change dir */
-    dir_str = strdup(s->params->string);
+    dir_str = strdup(env_arg(s->params));
     if (chdir(dir_str) != 0) {
       perror("Error when changing directory\n");
       return 1;
