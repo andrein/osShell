@@ -1,0 +1,11 @@
+[Buildset]
+BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x01\x00\x00\x00\x0e\x00o\x00s\x00S\x00h\x00e\x00l\x00l)
+
+[CMake]
+BuildDirs=/home/codertux/Projects/osShell/build
+CMakeDir=/usr/share/cmake/Modules
+Current CMake Binary=file:///usr/bin/cmake
+CurrentBuildDir=file:///home/codertux/Projects/osShell/build
+CurrentBuildType=Debug
+CurrentInstallDir=
+ProjectRootRelative=./
