@@ -19,9 +19,6 @@
 
 #define INCR 1
 
-#define PROMPT_STRING	"> "
-
-
 void parse_error(const char * str, const int where)
 {
 	fprintf(stderr, "Parse error near %d: %s\n", where, str);
@@ -315,12 +312,15 @@ int run_cmd(command_t *c)
 int main(void)
 {
   char *input;
+  char cwd[128];
   command_t *root;
 
   for (;;) {
     root = NULL;
+    /* get current directory */
+    getcwd(cwd, 128);
     /* print shell prompt */
-    input = (char*) readline("os-shell #> ");
+    input = (char*) readline(strcat(cwd, " #> "));
     /* we don't need empty lines in history */
     if (input){
       add_history(input);
