@@ -15,6 +15,7 @@ int is_internal(simple_command_t *s)
       !strcmp(s->verb->string, PUSHD) ||
       !strcmp(s->verb->string, POPD) ||
       !strcmp(s->verb->string, DIRS) ||
+      !strcmp(s->verb->string, ECHO) ||
       s->verb->next_part != NULL)
     return 1;
 
@@ -76,6 +77,13 @@ int run_internal(simple_command_t *s)
     }else{
       printf("Stack is empty.\n");
       return 1;
+    }
+  }
+  if(!strcmp(verb_str, ECHO)) {
+    if(!s->params->string) {
+      printf("\n");
+    }else{
+      printf("%s \n", s->params->string);
     }
   }
   
