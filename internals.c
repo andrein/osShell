@@ -15,6 +15,7 @@ int is_internal(simple_command_t *s)
       !strcmp(s->verb->string, PUSHD) ||
       !strcmp(s->verb->string, POPD) ||
       !strcmp(s->verb->string, DIRS) ||
+      !strcmp(s->verb->string, ECHO) ||
       s->verb->next_part != NULL)
     return 1;
 
@@ -79,8 +80,11 @@ int run_internal(simple_command_t *s)
     }
   }
   if(!strcmp(verb_str, ECHO)) {
-    printf("%s\n", s->params);
-    return 0;
+    if(!s->params->string) {
+      printf("\n");
+    }else{
+      printf("%s \n", s->params->string);
+    }
   }
   
   return 0;
