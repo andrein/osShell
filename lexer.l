@@ -119,13 +119,13 @@ semicolon			[;]
 <INITIAL>{setValueCharacter} {
 	UPD_LOCATION;
 	yylval.string_un = strdup(yytext);
-	pointerToMallocMemory(yylval.string_un);
+	add_to_memory_pool(yylval.string_un);
 	return WORD;
 }
 <INITIAL>{substitutionCharacter}{envVarName} {
 	UPD_LOCATION;
 	yylval.string_un = strdup(yytext + 1);
-	pointerToMallocMemory(yylval.string_un);
+	add_to_memory_pool(yylval.string_un);
 	return ENV_VAR;
 }
 <INITIAL>{substitutionCharacter} {
@@ -135,7 +135,7 @@ semicolon			[;]
 <INITIAL>{parameterValue} {
 	UPD_LOCATION;
 	yylval.string_un = strdup(yytext);
-	pointerToMallocMemory(yylval.string_un);
+	add_to_memory_pool(yylval.string_un);
 	return WORD;
 }
 <ACCEPT_ANY><<EOF>> {
@@ -148,7 +148,7 @@ semicolon			[;]
 <ACCEPT_ANY>{allButCharStateAny}* {
 	UPD_LOCATION;
 	yylval.string_un = strdup(yytext);
-	pointerToMallocMemory(yylval.string_un);
+	add_to_memory_pool(yylval.string_un);
 	return WORD;
 }
 <ACCEPT_ANY_AND_EXPANSION><<EOF>> {
@@ -161,7 +161,7 @@ semicolon			[;]
 <ACCEPT_ANY_AND_EXPANSION>{substitutionCharacter}{envVarName} {
 	UPD_LOCATION;
 	yylval.string_un = strdup(yytext + 1);
-	pointerToMallocMemory(yylval.string_un);
+	add_to_memory_pool(yylval.string_un);
 	return ENV_VAR;
 }
 <ACCEPT_ANY_AND_EXPANSION>{substitutionCharacter} {
@@ -171,7 +171,7 @@ semicolon			[;]
 <ACCEPT_ANY_AND_EXPANSION>{allButCharStateAnyAndExpansion}* {
 	UPD_LOCATION;
 	yylval.string_un = strdup(yytext);
-	pointerToMallocMemory(yylval.string_un);
+	add_to_memory_pool(yylval.string_un);
 	return WORD;
 }
 {anyChar} {
@@ -181,27 +181,24 @@ semicolon			[;]
 %%
 
 
-YY_BUFFER_STATE myState;
-bool haveOneBufferState = false;
+YY_BUFFER_STATE buf_state;
+bool buffer_active = false;
 
 
-void globalParseAnotherString(const char * str)
+void flex_parse_string(const char * str)
 {
-	globalEndParsing();
-	myState = yy_scan_string(str);
+	flex_free_buffers();
+	buf_state = yy_scan_string(str);
 	BEGIN(INITIAL);
-	/*
-	 actually i don't know how this should be done, but the
-	 above seems to work OK
-	*/
-	haveOneBufferState = true;
+
+	buffer_active = true;
 }
 
 
-void globalEndParsing()
+void flex_free_buffers()
 {
-	if (haveOneBufferState) {
-		yy_delete_buffer(myState);
-		haveOneBufferState = false;
+	if (buffer_active) {
+		yy_delete_buffer(buf_state);
+		buffer_active = false;
 	}
 }
