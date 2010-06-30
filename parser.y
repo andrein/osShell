@@ -11,15 +11,28 @@
 #include "parser.h"
 
 
+/* 
+ * globalAllocMem is a pointer to an array of pointers. keeps track of the addresses to be freed
+ * globalAllocCount is number of allocated pointers
+ * globalAllocSize is the size of the allocated memory pool.
+ * needsFree is set when there is something in the memory pool.
+ *
+ * command_root is the root of the parse tree.
+ */
+
 static GenericPointer * globalAllocMem = NULL;
 static size_t globalAllocCount = 0;
 static size_t globalAllocSize  = 0;
 static bool needsFree = false;
 static command_t * command_root = NULL;
 
-
 void yyerror(const char* str);
 
+/* 
+ * this function makes sure that the memory pool is large enough.
+ * if the memory pool is empty it allocates newSize * sizeof(GenericPointer) bytes of memory.
+ * otherwise it reallocates (newSize + globalAllocSize) *sizeof(GenericPointer) bytes of memory.
+ */
 
 static void ensureSize(size_t newSize)
 {
@@ -53,8 +66,12 @@ static void ensureSize(size_t newSize)
 	globalAllocMem = newPtr;
 }
 
+/*
+ * this function adds ptr to the memory pool.
+ */
 
-void pointerToMallocMemory(const void * ptr)
+
+void add_to_memory_pool(const void * ptr)
 {
 	if (ptr == NULL) {
 		fprintf(stderr, "malloc() failed\n");
@@ -69,7 +86,7 @@ void pointerToMallocMemory(const void * ptr)
 static simple_command_t * bind_parts(word_t * exe_name, word_t * params, redirect_t red)
 {
 	simple_command_t * s = (simple_command_t *) malloc(sizeof(simple_command_t));
-	pointerToMallocMemory(s);
+	add_to_memory_pool(s);
 
 	memset(s, 0, sizeof(*s));
 	assert(exe_name != NULL);
@@ -81,7 +98,6 @@ static simple_command_t * bind_parts(word_t * exe_name, word_t * params, redirec
 	s->err = red.red_e;
 	s->io_flags = red.red_flags;
 	s->up = NULL;
-	s->aux = NULL;
 	return s;
 }
 
@@ -89,7 +105,7 @@ static simple_command_t * bind_parts(word_t * exe_name, word_t * params, redirec
 static command_t * new_command(simple_command_t * scmd)
 {
 	command_t * c = (command_t *) malloc(sizeof(command_t));
-	pointerToMallocMemory(c);
+	add_to_memory_pool(c);
 
 	memset(c, 0, sizeof(*c));
 	c->up = c->cmd1 = c->cmd2 = NULL;
@@ -97,7 +113,6 @@ static command_t * new_command(simple_command_t * scmd)
 	assert(scmd != NULL);
 	c->scmd = scmd;
 	scmd->up = c;
-	c->aux = NULL;
 	return c;
 }
 
@@ -105,7 +120,7 @@ static command_t * new_command(simple_command_t * scmd)
 static command_t * bind_commands(command_t * cmd1, command_t * cmd2, operator_t op)
 {
 	command_t * c = (command_t *) malloc(sizeof(command_t));
-	pointerToMallocMemory(c);
+	add_to_memory_pool(c);
 
 	memset(c, 0, sizeof(*c));
 	c->up = NULL;
@@ -121,7 +136,6 @@ static command_t * bind_commands(command_t * cmd1, command_t * cmd2, operator_t 
 	assert((op > OP_NONE) && (op < OP_DUMMY));
 	c->op = op;
 	c->scmd = NULL;
-	c->aux = NULL;
 
 	return c;
 }
@@ -130,7 +144,7 @@ static command_t * bind_commands(command_t * cmd1, command_t * cmd2, operator_t 
 static word_t * new_word(const char * str, bool expand)
 {
 	word_t * w = (word_t *) malloc(sizeof(word_t));
-	pointerToMallocMemory(w);
+	add_to_memory_pool(w);
 
 	memset(w, 0, sizeof(*w));
 	assert(str != NULL);
@@ -514,7 +528,7 @@ bool parse_line(const char * line, command_t ** root)
 	}
 
 	free_parse_memory();
-	globalParseAnotherString(line);
+	flex_parse_string(line);
 	needsFree = true;
 	command_root = NULL;
 
@@ -535,7 +549,7 @@ bool parse_line(const char * line, command_t ** root)
 void free_parse_memory()
 {
 	if (needsFree) {
-		globalEndParsing();
+		flex_free_buffers();
 		while (globalAllocCount != 0) {
 			globalAllocCount--;
 			assert(globalAllocMem[globalAllocCount] != NULL);
