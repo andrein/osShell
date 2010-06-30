@@ -116,7 +116,10 @@ int run_internal(simple_command_t *s)
     /* insert the current directory onto the stack */
     push(&ds, getcwd(NULL, 256));
     
-    chdir(env_arg(s->params));
+    if(chdir(env_arg(s->params))){
+      printf("Directory does not exist!\n");
+      pop(&ds);
+    }
   }
   
   if(!strcmp(verb_str, DIRS)) {
