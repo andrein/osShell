@@ -13,8 +13,6 @@
 #define DIRS "dirs"
 #define ECHO "echo"
 #define PWD "pwd"
-
-//TODO
 #define HIST "history"
 
 

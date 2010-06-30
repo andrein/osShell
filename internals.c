@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <readline/history.h>
 
 int is_internal(simple_command_t *s) 
 {
@@ -17,6 +18,7 @@ int is_internal(simple_command_t *s)
       !strcmp(s->verb->string, DIRS) ||
       !strcmp(s->verb->string, ECHO) ||
       !strcmp(s->verb->string, PWD) ||
+      !strcmp(s->verb->string, HIST) ||
       s->verb->next_part != NULL)
     return 1;
 
@@ -32,9 +34,12 @@ int run_internal(simple_command_t *s)
     return 0;
 
   /* exit internal cmd */
-  if (!strcmp(verb_str, EXIT) ||
-      !strcmp(verb_str, QUIT))
+  if (!strcmp(verb_str, EXIT) || !strcmp(verb_str, QUIT)){
+    /* write the command history to disk */
+    write_history(NULL);
+    /* exit gracefully */
     exit(0);
+  }
   
   /* cd internal cmd */
   if (!strcmp(verb_str, CHDIR)) {
@@ -94,11 +99,21 @@ int run_internal(simple_command_t *s)
     }
     printf("\n");
   }
+  
+  /* prints working directory */
   if(!strcmp(verb_str, PWD)) {
     printf("%s \n", getcwd(NULL, 256));
   }
   
-  
-  
+  /* prints the command history */
+  if(!strcmp(verb_str, HIST)){
+    HIST_ENTRY **history;
+    int i;
+    
+    if (history = history_list())
+      for (i=0; history[i] != NULL; i++)
+	printf ("%d %s\n", i, history[i]->line);
+  }
+    
   return 0;
 }

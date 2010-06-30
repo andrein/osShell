@@ -24,6 +24,9 @@ int main(void)
   
   /* initialize directory stack */
   init(&ds);
+  /* initialize the GNU History library */
+  using_history();
+  read_history(NULL);
 
   for (;;) {
     root = NULL;
