@@ -80,11 +80,14 @@ int run_internal(simple_command_t *s)
     }
   }
   if(!strcmp(verb_str, ECHO)) {
-    if(!s->params->string) {
-      printf("\n");
-    }else{
-      printf("%s \n", s->params->string);
+    int argc, i;
+    char **argv;
+    get_args(s, &argc, &argv);
+    for(i=1; i<=argc; i++) {
+      printf("%s ", argv[i]);
     }
+    printf("\n");
+    
   }
   
   return 0;
