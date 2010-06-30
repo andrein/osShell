@@ -35,18 +35,18 @@ int main(void)
     if (input){
       add_history(input);
     } else {
-      return EXIT_FAILURE;
+      continue;
     }
     
     if (parse_line(input, &root)) {
-      /* valid command */
+      /* is root valid? */
       if (root != NULL)
         /* run command */
         run_cmd(root);
     }
     else {
       /* error parsing the command */
-      printf("%s", input);
+      printf("%s\n", input);
       fprintf(stderr, "Error parsing!\n");
     }
 
