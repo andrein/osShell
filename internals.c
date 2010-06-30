@@ -78,7 +78,7 @@ int run_internal(simple_command_t *s)
       return 1;
     }
   }
-  if(!strcmp(verb_str, HIST)) {
+  if(!strcmp(verb_str, ECHO)) {
     printf("%s\n", s->params);
     return 0;
   }
