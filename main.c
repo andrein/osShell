@@ -110,14 +110,14 @@ int run_internal(simple_command_t *s)
   /* push directory onto the stack */
   if(!strcmp(verb_str, PUSHD)) {
     if (s->params == NULL){
-      printf("todo error handling\n");
+      printf("Must insert directory name\n");
       return 0;
     }
     /* insert the current directory onto the stack */
     push(&ds, getcwd(NULL, 256));
     
     if(chdir(env_arg(s->params))){
-      printf("Directory does not exist!\n");
+      printf("Directory does not exist\n");
       pop(&ds);
     }
   }
