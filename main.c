@@ -111,26 +111,30 @@ int run_internal(simple_command_t *s)
   if(!strcmp(verb_str, PUSHD)) {
     if (s->params == NULL){
       printf("Must insert directory name\n");
-      return 0;
+      return 1;
     }
     /* insert the current directory onto the stack */
     push(&ds, getcwd(NULL, 256));
     
-    if(chdir(env_arg(s->params))){
+    if(chdir(env_arg(s->params)) != 0){
       printf("Directory does not exist\n");
       pop(&ds);
     }
   }
   
   if(!strcmp(verb_str, DIRS)) {
-    print(&ds);
+    if (!print(&ds)){
+      printf("Stack is empty.\n");
+      return 1;
+    }
   }
   if(!strcmp(verb_str, POPD)) {
     dir_str = pop(&ds);
     if(dir_str) {
       chdir(dir_str);
     }else{
-      printf("todo error handling\n");
+      printf("Stack is empty.\n");
+      return 1;
     }
   }
   

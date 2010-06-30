@@ -11,5 +11,5 @@ typedef struct {
 void init(dir_stack_t *ds);
 int push(dir_stack_t *ds, char *path);
 char* pop(dir_stack_t *ds);
-void print(dir_stack_t *ds);
+int print(dir_stack_t *ds);
 #endif 

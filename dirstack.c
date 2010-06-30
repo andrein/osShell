@@ -22,8 +22,9 @@ char* pop(dir_stack_t *ds){
   return ds->dir[--ds->size];
 }
 
-void print(dir_stack_t *ds){
+int print(dir_stack_t *ds){
   int i;
   for (i=0; i<ds->size; i++)
     printf("%s\n", ds->dir[i]);
+  return ds->size;
 }
