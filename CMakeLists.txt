@@ -12,9 +12,12 @@ add_flex_bison_dependency(osScanner osParser)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(osshell 
+add_executable(osshell
   main.c
+  args.c
+  internals.c
   dirstack.c
+  runner.c 
   ${BISON_osParser_OUTPUTS}
   ${FLEX_osScanner_OUTPUTS}
 )
