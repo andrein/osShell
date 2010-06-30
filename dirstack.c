@@ -11,7 +11,7 @@ int push(dir_stack_t *ds, char *path){
   if (ds->size == STACKSIZE) // stack is full
     return -1;
   
-  ds->dir[ds->size++] = strdup(path);
+  ds->dir[ds->size++] = path;
   return ds->size;
 }
 

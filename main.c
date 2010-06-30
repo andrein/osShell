@@ -9,15 +9,22 @@
 #include <string.h>
 
 #include "parser.h"
+#include "dirstack.h"
 
 #define EXIT "exit"
 #define QUIT "quit"
 #define CHDIR  "cd"
+#define POPD "popd"
+#define PUSHD "pushd"
+#define DIRS "dirs"
 
 /* errors */
 #define EXEC_ERR "Execution failed"
 
 #define INCR 1
+
+/* directory stack */
+dir_stack_t ds;
 
 void parse_error(const char * str, const int where)
 {
@@ -64,6 +71,9 @@ int is_internal(simple_command_t *s)
   if (!strcmp(s->verb->string, EXIT) ||
       !strcmp(s->verb->string, QUIT) ||
       !strcmp(s->verb->string, CHDIR) ||
+      !strcmp(s->verb->string, PUSHD) ||
+      !strcmp(s->verb->string, POPD) ||
+      !strcmp(s->verb->string, DIRS) ||
       s->verb->next_part != NULL)
     return 1;
 
@@ -73,7 +83,7 @@ int is_internal(simple_command_t *s)
 int run_internal(simple_command_t *s)
 {
   char *dir_str, *verb_str;
-
+  
   verb_str = strdup(env_arg(s->verb));
   if (strlen(verb_str) == 0)
     return 0;
@@ -96,7 +106,31 @@ int run_internal(simple_command_t *s)
       return 1;
     }
   }
-
+  
+  /* push directory onto the stack */
+  if(!strcmp(verb_str, PUSHD)) {
+    if (s->params == NULL){
+      printf("todo error handling\n");
+      return 0;
+    }
+    /* insert the current directory onto the stack */
+    push(&ds, getcwd(NULL, 256));
+    
+    chdir(env_arg(s->params));
+  }
+  
+  if(!strcmp(verb_str, DIRS)) {
+    print(&ds);
+  }
+  if(!strcmp(verb_str, POPD)) {
+    dir_str = pop(&ds);
+    if(dir_str) {
+      chdir(dir_str);
+    }else{
+      printf("todo error handling\n");
+    }
+  }
+  
   return 0;
 }
 
@@ -314,6 +348,9 @@ int main(void)
   char *input;
   char cwd[128];
   command_t *root;
+  
+  /* initialize directory stack */
+  init(&ds);
 
   for (;;) {
     root = NULL;
