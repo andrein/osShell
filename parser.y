@@ -20,11 +20,11 @@
  * command_root is the root of the parse tree.
  */
 
-static GenericPointer * globalAllocMem = NULL;
+static GenericPointer *globalAllocMem = NULL;
 static size_t globalAllocCount = 0;
 static size_t globalAllocSize  = 0;
 static bool needsFree = false;
-static command_t * command_root = NULL;
+static command_t *command_root = NULL;
 
 void yyerror(const char* str);
 
@@ -36,34 +36,34 @@ void yyerror(const char* str);
 
 static void ensureSize(size_t newSize)
 {
-	GenericPointer * newPtr;
-	assert(newSize > 0);
+  GenericPointer *newPtr;
+  assert(newSize > 0);
 
-	if (globalAllocSize == 0) {
-		assert(globalAllocMem == NULL);
-		globalAllocSize = newSize;
-		globalAllocMem = (GenericPointer *)malloc(sizeof(GenericPointer) * globalAllocSize);
-		if (globalAllocMem == NULL) {
-			fprintf(stderr, "malloc() failed\n");
-			exit(EXIT_FAILURE);
-		}
+  if (globalAllocSize == 0) {
+    assert(globalAllocMem == NULL);
+    globalAllocSize = newSize;
+    globalAllocMem = (GenericPointer *)malloc(sizeof(GenericPointer) * globalAllocSize);
+    if (globalAllocMem == NULL) {
+      fprintf(stderr, "malloc() failed\n");
+      exit(EXIT_FAILURE);
+    }
 
-		return;
-	}
+    return;
+  }
 
-	assert(globalAllocMem != NULL);
-	if (globalAllocSize >= newSize) {
-		return;
-	}
+  assert(globalAllocMem != NULL);
+  if (globalAllocSize >= newSize) {
+    return;
+  }
 
-	globalAllocSize += newSize;
-	newPtr = (GenericPointer *)realloc((void *)globalAllocMem, sizeof(GenericPointer) * globalAllocSize);
-	if (newPtr == NULL) {
-		fprintf(stderr, "realloc() failed\n");
-		exit(EXIT_FAILURE);
-	}
+  globalAllocSize += newSize;
+  newPtr = (GenericPointer *)realloc((void *)globalAllocMem, sizeof(GenericPointer) * globalAllocSize);
+  if (newPtr == NULL) {
+    fprintf(stderr, "realloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
 
-	globalAllocMem = newPtr;
+  globalAllocMem = newPtr;
 }
 
 /*
@@ -71,139 +71,171 @@ static void ensureSize(size_t newSize)
  */
 
 
-void add_to_memory_pool(const void * ptr)
+void add_to_memory_pool(const void *ptr)
 {
-	if (ptr == NULL) {
-		fprintf(stderr, "malloc() failed\n");
-		exit(EXIT_FAILURE);
-	}
+  if (ptr == NULL) {
+    fprintf(stderr, "malloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
 
-	ensureSize(globalAllocCount + 1);
-	globalAllocMem[globalAllocCount++] = (GenericPointer)ptr;
+  ensureSize(globalAllocCount + 1);
+  globalAllocMem[globalAllocCount++] = (GenericPointer)ptr;
 }
 
 
-static simple_command_t * bind_parts(word_t * exe_name, word_t * params, redirect_t red)
-{
-	simple_command_t * s = (simple_command_t *) malloc(sizeof(simple_command_t));
-	add_to_memory_pool(s);
+/*
+ * this function creates a simple_command_t
+ *
+ * exe_name is the name of the executable
+ * params is a list of parameters
+ * red is a structure of redirections
+ */
 
-	memset(s, 0, sizeof(*s));
-	assert(exe_name != NULL);
-	assert(exe_name->next_word == NULL);
-	s->verb = exe_name;
-	s->params = params;
-	s->in = red.red_i;
-	s->out = red.red_o;
-	s->err = red.red_e;
-	s->io_flags = red.red_flags;
-	s->up = NULL;
-	return s;
+static simple_command_t *bind_parts(word_t *exe_name, word_t *params, redirect_t red)
+{
+  simple_command_t *s = (simple_command_t *) malloc(sizeof(simple_command_t));
+  add_to_memory_pool(s);
+
+  memset(s, 0, sizeof(*s));
+  assert(exe_name != NULL);
+  assert(exe_name->next_word == NULL);
+  s->verb = exe_name;
+  s->params = params;
+  s->in = red.red_i;
+  s->out = red.red_o;
+  s->err = red.red_e;
+  s->io_flags = red.red_flags;
+  s->up = NULL;
+  return s;
 }
 
+/*
+ * this function creates a command_t storing a simple command pointed by scmd.
+ *
+ * cmd1 and cmd2 must to be NULL and op must be OP_NONE
+ */
 
-static command_t * new_command(simple_command_t * scmd)
+
+static command_t* new_command(simple_command_t *scmd)
 {
-	command_t * c = (command_t *) malloc(sizeof(command_t));
-	add_to_memory_pool(c);
+  command_t *c = (command_t *) malloc(sizeof(command_t));
+  add_to_memory_pool(c);
 
-	memset(c, 0, sizeof(*c));
-	c->up = c->cmd1 = c->cmd2 = NULL;
-	c->op = OP_NONE;
-	assert(scmd != NULL);
-	c->scmd = scmd;
-	scmd->up = c;
-	return c;
+  memset(c, 0, sizeof(*c));
+  c->up = c->cmd1 = c->cmd2 = NULL;
+  c->op = OP_NONE;
+  assert(scmd != NULL);
+  c->scmd = scmd;
+  scmd->up = c;
+  return c;
 }
 
+/*
+ * this function creates a command_t storing a compound command.
+ *
+ * it takes two arguments, cmd1 and cmd2, which are the two commands that need to be joined,
+ * and an operator op.
+ * 
+ * scmd needs to be NULL
+ */
 
-static command_t * bind_commands(command_t * cmd1, command_t * cmd2, operator_t op)
+static command_t* bind_commands(command_t *cmd1, command_t *cmd2, operator_t op)
 {
-	command_t * c = (command_t *) malloc(sizeof(command_t));
-	add_to_memory_pool(c);
+  command_t *c = (command_t *) malloc(sizeof(command_t));
+  add_to_memory_pool(c);
 
-	memset(c, 0, sizeof(*c));
-	c->up = NULL;
-	assert(cmd1 != NULL);
-	assert(cmd1->up == NULL);
-	c->cmd1 = cmd1;
-	cmd1->up = c;
-	assert(cmd2 != NULL);
-	assert(cmd2->up == NULL);
-	assert(cmd1 != cmd2);
-	c->cmd2 = cmd2;
-	cmd2->up = c;
-	assert((op > OP_NONE) && (op < OP_DUMMY));
-	c->op = op;
-	c->scmd = NULL;
+  memset(c, 0, sizeof(*c));
+  c->up = NULL;
+  assert(cmd1 != NULL);
+  assert(cmd1->up == NULL);
+  c->cmd1 = cmd1;
+  cmd1->up = c;
+  assert(cmd2 != NULL);
+  assert(cmd2->up == NULL);
+  assert(cmd1 != cmd2);
+  c->cmd2 = cmd2;
+  cmd2->up = c;
+  assert((op > OP_NONE) && (op < OP_DUMMY));
+  c->op = op;
+  c->scmd = NULL;
 
-	return c;
+  return c;
 }
 
+/*
+ * this function creates a new word_t from the contents of str.
+ * if str is the name of an environment variable, expand must be true
+ */
 
-static word_t * new_word(const char * str, bool expand)
+static word_t *new_word(const char *str, bool expand)
 {
-	word_t * w = (word_t *) malloc(sizeof(word_t));
-	add_to_memory_pool(w);
+  word_t *w = (word_t *) malloc(sizeof(word_t));
+  add_to_memory_pool(w);
 
-	memset(w, 0, sizeof(*w));
-	assert(str != NULL);
-	w->string = str;
-	w->expand = expand;
-	w->next_part = NULL;
-	w->next_word = NULL;
+  memset(w, 0, sizeof(*w));
+  assert(str != NULL);
+  w->string = str;
+  w->expand = expand;
+  w->next_part = NULL;
+  w->next_word = NULL;
 
-	return w;
+  return w;
 }
 
+/*
+ * adds w to lsts part list.
+ */
 
-static word_t * add_part_to_word(word_t * w, word_t * lst)
+static word_t* add_part_to_word(word_t * w, word_t * lst)
 {
-	word_t * crt = lst;
-	assert(lst != NULL);
-	assert(w != NULL);
+  word_t *crt = lst;
+  assert(lst != NULL);
+  assert(w != NULL);
 
-	/*
-	 we could insert at the beginnig and then invert the list
-	 but this would make the code a bit more complicated
-	 thus, we assume we have small lists and O(n*n) is acceptable
-	*/
+  /*
+    we could insert at the beginnig and then invert the list
+    but this would make the code a bit more complicated
+    thus, we assume we have small lists and O(n*n) is acceptable
+  */
 
-	while (crt->next_part != NULL) {
-		crt = crt->next_part;
-		assert((crt == NULL) || (crt->next_word == NULL));
-	}
+  while (crt->next_part != NULL) {
+    crt = crt->next_part;
+    assert((crt == NULL) || (crt->next_word == NULL));
+  }
 
-	crt->next_part = w;
-	assert(w->next_part == NULL);
-	assert(w->next_word == NULL);
+  crt->next_part = w;
+  assert(w->next_part == NULL);
+  assert(w->next_word == NULL);
 
-	return lst;
+  return lst;
 }
 
+/*
+ * adds w to the lst word list
+ */
 
-static word_t * add_word_to_list(word_t * w, word_t * lst)
+static word_t* add_word_to_list(word_t *w, word_t *lst)
 {
-	word_t * crt = lst;
-	assert(w != NULL);
+  word_t *crt = lst;
+  assert(w != NULL);
 
-	if (crt == NULL) {
-		assert(w->next_word == NULL);
-		return w;
-	}
-	assert(lst != NULL);
+  if (crt == NULL) {
+    assert(w->next_word == NULL);
+    return w;
+  }
+  assert(lst != NULL);
 
-	/*
-	 same as above
-	*/
-	while (crt->next_word != NULL) {
-		crt = crt->next_word;
-	}
+  /*
+    same as above
+  */
+  while (crt->next_word != NULL) {
+    crt = crt->next_word;
+  }
 
-	crt->next_word = w;
-	assert(w->next_word == NULL);
+  crt->next_word = w;
+  assert(w->next_word == NULL);
 
-	return lst;
+  return lst;
 }
 
 
@@ -515,60 +547,60 @@ word:
 
 bool parse_line(const char * line, command_t ** root)
 {
-	if (*root != NULL) {
-		/* see the comment in parser.h */
-		assert(false);
-		return false;
-	}
+  if (*root != NULL) {
+    /* see the comment in parser.h */
+    assert(false);
+    return false;
+  }
 
-	if (line == NULL) {
-		/* see the comment in parser.h */
-		assert(false);
-		return false;
-	}
+  if (line == NULL) {
+    /* see the comment in parser.h */
+    assert(false);
+    return false;
+  }
 
-	free_parse_memory();
-	flex_parse_string(line);
-	needsFree = true;
-	command_root = NULL;
+  free_parse_memory();
+  flex_parse_string(line);
+  needsFree = true;
+  command_root = NULL;
 
-	yylloc.first_line = yylloc.last_line = 1;
-	yylloc.first_column = yylloc.last_column = 0;
+  yylloc.first_line = yylloc.last_line = 1;
+  yylloc.first_column = yylloc.last_column = 0;
 
-	if (yyparse() != 0) {
-		/* yyparse failed */
-		return false;
-	}
+  if (yyparse() != 0) {
+    /* yyparse failed */
+    return false;
+  }
 
-	*root = command_root;
+  *root = command_root;
 
-	return true;
+  return true;
 }
 
 
 void free_parse_memory()
 {
-	if (needsFree) {
-		flex_free_buffers();
-		while (globalAllocCount != 0) {
-			globalAllocCount--;
-			assert(globalAllocMem[globalAllocCount] != NULL);
-			free(globalAllocMem[globalAllocCount]);
-			globalAllocMem[globalAllocCount] = NULL;
-		}
+  if (needsFree) {
+    flex_free_buffers();
+    while (globalAllocCount != 0) {
+      globalAllocCount--;
+      assert(globalAllocMem[globalAllocCount] != NULL);
+      free(globalAllocMem[globalAllocCount]);
+      globalAllocMem[globalAllocCount] = NULL;
+    }
 
-		if (globalAllocMem != NULL) {
-			free((void *)globalAllocMem);
-			globalAllocMem = NULL;
-		}
+    if (globalAllocMem != NULL) {
+      free((void *)globalAllocMem);
+      globalAllocMem = NULL;
+    }
 
-		globalAllocSize = 0;
-		needsFree = false;
-	}
+    globalAllocSize = 0;
+    needsFree = false;
+  }
 }
 
 
 void yyerror(const char* str)
 {
-	parse_error(str, yylloc.first_column);
+  parse_error(str, yylloc.first_column);
 }
