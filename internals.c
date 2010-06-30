@@ -65,12 +65,15 @@ int run_internal(simple_command_t *s)
     }
   }
   
+  /* show directories in the stack */
   if(!strcmp(verb_str, DIRS)) {
     if (!print(&ds)){
       printf("Stack is empty.\n");
       return 1;
     }
   }
+  
+  /* pop directory off the stack */
   if(!strcmp(verb_str, POPD)) {
     dir_str = pop(&ds);
     if(dir_str) {
@@ -80,6 +83,8 @@ int run_internal(simple_command_t *s)
       return 1;
     }
   }
+  
+  /* echo [params ...] just echoes the parameters back to the user */
   if(!strcmp(verb_str, ECHO)) {
     int argc, i;
     char **argv;
@@ -88,7 +93,6 @@ int run_internal(simple_command_t *s)
       printf("%s ", argv[i]);
     }
     printf("\n");
-    
   }
   if(!strcmp(verb_str, PWD)) {
     printf("%s \n", getcwd(NULL, 256));
