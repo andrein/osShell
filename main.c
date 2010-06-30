@@ -18,9 +18,9 @@ void parse_error(const char * str, const int where)
 
 int main(void)
 {
-  char *input;
-  char cwd[128];
-  command_t *root;
+  char *input; // holds the input string.
+  char cwd[128]; // the current working directory.
+  command_t *root; // the root of the parse tree.
   
   /* initialize directory stack */
   init(&ds);

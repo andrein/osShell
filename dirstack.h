@@ -8,7 +8,6 @@
  * size represents it's size.
  * dir is an array of STACKSIZE strings
  */
-#include "internals.h"
 
 typedef struct {
   int size;

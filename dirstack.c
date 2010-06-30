@@ -9,7 +9,7 @@ void init(dir_stack_t *ds){
 
 int push(dir_stack_t *ds, char *path){
   if (ds->size == STACKSIZE) // stack is full
-    return -1;
+    return -1; // error
   
   ds->dir[ds->size++] = path;
   return ds->size;

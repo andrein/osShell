@@ -11,10 +11,11 @@
 #define POPD "popd"
 #define PUSHD "pushd"
 #define DIRS "dirs"
+#define ECHO "echo"
+
 //TODO
 #define HIST "history"
 #define PWD "pwd"
-#define ECHO "echo"
 
 dir_stack_t ds;
 
