@@ -12,10 +12,11 @@
 #define PUSHD "pushd"
 #define DIRS "dirs"
 #define ECHO "echo"
+#define PWD "pwd"
 
 //TODO
 #define HIST "history"
-#define PWD "pwd"
+
 
 dir_stack_t ds;
 
