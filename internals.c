@@ -107,6 +107,11 @@ int run_internal(simple_command_t *s)
   
   /* prints the command history */
   if(!strcmp(verb_str, HIST)){
+    /*
+     * HIST_ENTRY is a structure defined by the History library which holds the line and timestamp of
+     * a history entry.
+     * define in readline/history.h
+     */
     HIST_ENTRY **history;
     int i;
     
@@ -114,6 +119,6 @@ int run_internal(simple_command_t *s)
       for (i=0; history[i] != NULL; i++)
 	printf ("%d %s\n", i, history[i]->line);
   }
-    
+
   return 0;
 }
