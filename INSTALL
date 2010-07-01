@@ -1,0 +1,28 @@
+=== Prerequsites ===
+
+CMake 2.8.0
+  It should be packaged for all major linux distributions.
+  Please see http://www.cmake.org/ for more information and installation instructions.
+
+GNU Readline 
+  Tested with version 6.1.
+  Don't forget to install readline-devel or the equivalent development package.
+
+GNU Flex
+  Tested with version 2.5.
+
+GNU Bison
+  Tested with version 2.4.
+
+=== Building ===
+
+osShell uses out-of-tree builds.
+Run the following commands after switching to the source directory:
+
+  mkdir build && cd build
+  cmake ..
+  make && make install
+
+To install locally do not run the make install command. osShell will be found in "build/"
+and can be run with "./osshell"
+
